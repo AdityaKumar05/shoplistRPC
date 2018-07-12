@@ -1,14 +1,14 @@
 package com.sample.shoplist.ShopList.client;
 
 import java.util.ArrayList;
-
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -33,8 +33,10 @@ public class ShopList implements EntryPoint {
     FlowPanel divList=new FlowPanel();
     FlexTable listH=new FlexTable();
     FlexTable listB=new FlexTable();
+    Label empty= new Label();
     ArrayList<String> name=new ArrayList<String>();
     ArrayList<String> done=new ArrayList<String>();
+    
     ScrollPanel scrollPanel = new ScrollPanel();
     private RandomDataAsync randomData = (RandomDataAsync) GWT.create(RandomData.class); 
 
@@ -45,6 +47,7 @@ public class ShopList implements EntryPoint {
     listH.setText(0,1,"SELECTED");
     divList.add(listH);
     divList.add(scrollPanel);
+    divList.add(empty);
     RootPanel.get("test").add(random);
     RootPanel.get("test").add(listItemTB);
     RootPanel.get("test").add(addItem);
@@ -52,6 +55,7 @@ public class ShopList implements EntryPoint {
     RootPanel.get("test").add(showAll);
     RootPanel.get("test").add(showSelected);
     RootPanel.get("test").add(deleteAll);
+    listItemTB.getElement (). setPropertyString ("placeholder", "Search or Press Enter to ADD");
 
    addItem.addClickHandler(new ClickHandler(){
       public void onClick(ClickEvent evt){
@@ -88,6 +92,10 @@ public class ShopList implements EntryPoint {
 
  showSelected.addClickHandler(new ClickHandler(){
   public void onClick(ClickEvent evt){
+	  if(name.size()==0)
+		  empty.setText("Nothing To See Here!");
+	  else
+		  empty.setText("");
     listB.removeAllRows();
     int count=0;
     for(int i=0;i<name.size();i++)
@@ -103,12 +111,29 @@ public class ShopList implements EntryPoint {
   }
 });
 
-   listItemTB.addKeyDownHandler(new KeyDownHandler(){
-      public void onKeyDown(KeyDownEvent evt){
-        if(listItemTB.getText()!="")
+   listItemTB.addKeyUpHandler(new KeyUpHandler(){
+      public void onKeyUp(KeyUpEvent evt){
+    	  ArrayList<String> Sdone=new ArrayList<String>();
+    	    ArrayList<String> searchResult=new ArrayList<String>();
+          if(listItemTB.getText()!=""){
+        	  listB.removeAllRows();
+		  String str=listItemTB.getText();
+    	  if(name.size()!=0){
+    		  for(int i=0;i<name.size();i++){
+        		  if(name.get(i).contains(str)){
+        			  searchResult.add(name.get(i));
+        			  Sdone.add(done.get(i));
+        		  }
+        		  updateSearch(searchResult,Sdone);
+        		  }
+    		  
+    	  }
+    	  
         if(evt.getNativeKeyCode()==KeyCodes.KEY_ENTER )
           {addList();    
-          listItemTB.setText("");}
+          listItemTB.setText("");}}else{
+        	  updateList();
+          }
 
       }
    });
@@ -122,7 +147,24 @@ public class ShopList implements EntryPoint {
 }); 
 
   }
+  void updateSearch(ArrayList<String> sr,ArrayList<String> sd){
+	  if(sr.size()==0)
+		  empty.setText("Nothing to see here!");
+	  else{
+		  empty.setText("");
+	  listB.removeAllRows();
+	  for(int i=0;i<sr.size();i++)
+	    {
+	      CheckBox cb=new CheckBox();
+	      boolean b=sd.get(i).equalsIgnoreCase("true")?true:false;
+	      cb.setValue(b);
+	      listB.setWidget(i,1,cb);
+	      listB.setText(i,0,sr.get(i));
+	    } 
+	  }
+  }
   void getDataForList(){
+	  empty.setText("");
     randomData.getRandomData(new AsyncCallback<ArrayList<String>>() {
       public void onFailure(Throwable caught) {
         Window.alert("RPC to getRandomData() failed.");
@@ -139,7 +181,7 @@ public class ShopList implements EntryPoint {
                   name.add(result.get(i));
                   done.add("false");
                   listB.setText(i,0,name.get(i));
-                } 
+              } 
        
       }
     });
@@ -154,6 +196,7 @@ public class ShopList implements EntryPoint {
   }
   public void addList()
   {
+	  listB.removeAllRows();
     if(name.contains(listItemTB.getText()))
       return;
     if(listItemTB.getText()!=""){
@@ -161,7 +204,6 @@ public class ShopList implements EntryPoint {
       done.add("false");
     }
     listItemTB.setText("");
-
     //ADDING ELEMENTS TO FLEXTABLE
     for(int i=0;i<name.size();i++)
     {
@@ -172,6 +214,11 @@ public class ShopList implements EntryPoint {
     updateList();
   }
   public void updateList(){
+	  if(name.size()==0)
+		  empty.setText("Nothing to see here!");
+	  else{
+		  empty.setText("");
+	  listB.removeAllRows();
     for(int i=0;i<name.size();i++)
     {
       CheckBox cb=new CheckBox();
@@ -180,6 +227,6 @@ public class ShopList implements EntryPoint {
       listB.setWidget(i,1,cb);
       listB.setText(i,0,name.get(i));
     }
-   
   } 
+  }
 }
