@@ -41,7 +41,6 @@ public class ShopList implements EntryPoint {
     HorizontalPanel setPager= new HorizontalPanel();
     ArrayList<String> name=new ArrayList<String>();
     ArrayList<String> done=new ArrayList<String>();
-    String doneList[][]=new String[500][10];
     Anchor prev=new Anchor();
     Label curPage=new Label();
     Anchor a1=new Anchor();
@@ -119,7 +118,7 @@ next.addClickHandler(new ClickHandler(){
 	public void onClick(ClickEvent evt){
 		changeNext();
 		int x=Integer.parseInt(curPage.getText());
-		if(x+1<=maxPage)
+		if(x+1<=maxPage && x!=1)
 		{
 			a1.setText(""+(x-1));
 			a2.setText(""+(x));
@@ -131,17 +130,21 @@ next.addClickHandler(new ClickHandler(){
 
 a1.addClickHandler(new ClickHandler(){
 	public void onClick(ClickEvent evt){
-		int x=Integer.parseInt(a1.getText());
-		if(!(x-1<=0)){
-			gotoPage(x);
-			curPage.setText(""+x);
-			a1.setText(""+(x-1));
-			a2.setText(""+(x));
-			a3.setText(""+(x+1));
-		}else{
-			gotoPage(x);
+		if(name.size()!=0){
+			int x=Integer.parseInt(a1.getText());
+			if(!(x-1<=0)){
+				gotoPage(x);
+				curPage.setText(""+x);
+				a1.setText(""+(x-1));
+				a2.setText(""+(x));
+				a3.setText(""+(x+1));
+			}else{
+				gotoPage(x);
+			}
 		}
-		
+		else{
+			empty.setText("Nothing to See here!");
+		}
 	}
 });
 a2.addClickHandler(new ClickHandler(){
@@ -152,6 +155,7 @@ a2.addClickHandler(new ClickHandler(){
 });
 a3.addClickHandler(new ClickHandler(){
 	public void onClick(ClickEvent evt){
+		if(name.size()!=0){
 		int x=Integer.parseInt(a3.getText());
 		
 		if(!(x+1>maxPage)){
@@ -163,7 +167,10 @@ a3.addClickHandler(new ClickHandler(){
 		}else{
 			gotoPage(x);
 		}
-		
+		}
+		else{
+			empty.setText("Nothing to See here!");
+		}
 	}
 });
 
@@ -238,14 +245,13 @@ a3.addClickHandler(new ClickHandler(){
     @Override 
     public void onClick(ClickEvent event) {  
          int rowIndex = listB.getCellForEvent(event).getRowIndex();
-         setDone(rowIndex);
+         setDone(rowIndex,Integer.parseInt(curPage.getText()));
     } 
 }); 
 
   }
   void changeNext(){
 	  gotoPage(Integer.parseInt(curPage.getText())+1);
-		
 	}
   void changePrevious(){
 	  gotoPage(Integer.parseInt(curPage.getText())-1);
@@ -286,7 +292,6 @@ a3.addClickHandler(new ClickHandler(){
         	done.clear();
             for(int i=0;i<result.size();i++)
               {
-                
                   name.add(result.get(i));
                   done.add("false");
               } 
@@ -300,16 +305,18 @@ a3.addClickHandler(new ClickHandler(){
     });
   }
   
-  public void setDone(int i){
-    if(done.get(i).equalsIgnoreCase("false"))
+  public void setDone(int i,int currentPage){
+    i=((currentPage-1)*10)+i;
+	  if(done.get(i).equalsIgnoreCase("false"))
       done.set(i,"true");
     else
       done.set(i, "false");
     updateList(Integer.parseInt(curPage.getText()));
   }
+  
   public void addList()
   {
-	  if(maxPage*10<name.size())
+	  if(maxPage*10<name.size()+1)
 		  maxPage++;
 	  listB.removeAllRows();
     if(name.contains(listItemTB.getText()))
@@ -328,23 +335,7 @@ a3.addClickHandler(new ClickHandler(){
     }
     updateList(Integer.parseInt(curPage.getText()));
   }
-//  public void updateList(){
-//	  if(name.size()==0)
-//		  empty.setText("Nothing to see here!");
-//	  else{
-//		  empty.setText("");
-//	  listB.removeAllRows();
-//    for(int i=0;i<name.size();i++)
-//    {
-//      CheckBox cb=new CheckBox();
-//      boolean b=done.get(i).equalsIgnoreCase("true")?true:false;
-//      cb.setValue(b);
-//      listB.setWidget(i,1,cb);
-//      listB.setText(i,0,name.get(i));
-//    }
-//  } 
-//  }
-  
+
   public void updateList(int page){
 	  int count=0;	  
 if(name.size()==0)
