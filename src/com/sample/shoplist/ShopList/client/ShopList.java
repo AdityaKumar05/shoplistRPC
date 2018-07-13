@@ -14,16 +14,19 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 
 public class ShopList implements EntryPoint {
+	int maxPage=5;
     TextBox listItemTB= new TextBox();
     Button addItem= new Button("ADD ITEM");
     Button showAll= new Button("Show All");
@@ -34,13 +37,34 @@ public class ShopList implements EntryPoint {
     FlexTable listH=new FlexTable();
     FlexTable listB=new FlexTable();
     Label empty= new Label();
+    HorizontalPanel panel= new HorizontalPanel();
+    HorizontalPanel setPager= new HorizontalPanel();
     ArrayList<String> name=new ArrayList<String>();
     ArrayList<String> done=new ArrayList<String>();
-    
+    String doneList[][]=new String[500][10];
+    Anchor prev=new Anchor();
+    Label curPage=new Label();
+    Anchor a1=new Anchor();
+    Anchor a2=new Anchor();
+    Anchor a3=new Anchor();
+    int index;
+    Anchor next=new Anchor();
     ScrollPanel scrollPanel = new ScrollPanel();
     private RandomDataAsync randomData = (RandomDataAsync) GWT.create(RandomData.class); 
 
   public void onModuleLoad() {
+	  a1.setText("1");
+	  a2.setText("2");
+	  a3.setText("3");
+	  setPager.add(prev);
+	setPager.add(a1);
+	setPager.add(a2);
+	setPager.add(a3);
+		setPager.add(next);
+	curPage.addStyleName("yop");
+	  prev.setText("Prev");
+	  curPage.setText("1");
+	  next.setText("Next");
     scrollPanel.add(listB);
     scrollPanel.addStyleName("testDiv");
     listH.setText(0,0,"NAME");
@@ -48,15 +72,19 @@ public class ShopList implements EntryPoint {
     divList.add(listH);
     divList.add(scrollPanel);
     divList.add(empty);
+    panel.add(curPage);
     RootPanel.get("test").add(random);
     RootPanel.get("test").add(listItemTB);
     RootPanel.get("test").add(addItem);
     RootPanel.get("test").add(divList);
+    RootPanel.get("test").add(setPager);
+    RootPanel.get("test").add(panel);
     RootPanel.get("test").add(showAll);
     RootPanel.get("test").add(showSelected);
     RootPanel.get("test").add(deleteAll);
     listItemTB.getElement (). setPropertyString ("placeholder", "Search or Press Enter to ADD");
 
+    
    addItem.addClickHandler(new ClickHandler(){
       public void onClick(ClickEvent evt){
         if(listItemTB.getText()!="")
@@ -75,6 +103,69 @@ public class ShopList implements EntryPoint {
     }
  });
 
+prev.addClickHandler(new ClickHandler(){
+	public void onClick(ClickEvent evt){
+		changePrevious();
+		int x=Integer.parseInt(curPage.getText());
+		if(x-1>0)
+		{
+			a1.setText(""+(x-1));
+			a2.setText(""+(x));
+			a3.setText(""+(x+1));
+		}
+	}
+});
+next.addClickHandler(new ClickHandler(){
+	public void onClick(ClickEvent evt){
+		changeNext();
+		int x=Integer.parseInt(curPage.getText());
+		if(x+1<=maxPage)
+		{
+			a1.setText(""+(x-1));
+			a2.setText(""+(x));
+			a3.setText(""+(x+1));
+		}
+
+	}
+});
+
+a1.addClickHandler(new ClickHandler(){
+	public void onClick(ClickEvent evt){
+		int x=Integer.parseInt(a1.getText());
+		if(!(x-1<=0)){
+			gotoPage(x);
+			curPage.setText(""+x);
+			a1.setText(""+(x-1));
+			a2.setText(""+(x));
+			a3.setText(""+(x+1));
+		}else{
+			gotoPage(x);
+		}
+		
+	}
+});
+a2.addClickHandler(new ClickHandler(){
+	public void onClick(ClickEvent evt){
+		int x=Integer.parseInt(a2.getText());
+		gotoPage(x);
+		curPage.setText(""+x);	}
+});
+a3.addClickHandler(new ClickHandler(){
+	public void onClick(ClickEvent evt){
+		int x=Integer.parseInt(a3.getText());
+		
+		if(!(x+1>maxPage)){
+			gotoPage(x);
+			curPage.setText(""+x);
+			a1.setText(""+(x-1));
+			a2.setText(""+(x));
+			a3.setText(""+(x+1));
+		}else{
+			gotoPage(x);
+		}
+		
+	}
+});
 
    random.addClickHandler(new ClickHandler(){
       public void onClick(ClickEvent evt){
@@ -84,14 +175,19 @@ public class ShopList implements EntryPoint {
 
    showAll.addClickHandler(new ClickHandler(){
     public void onClick(ClickEvent evt){
-     updateList();
-
-
+        updateList(1);
+        a1.setText("1");
+  	  a2.setText("2");
+  	  a3.setText("3");
+        
     }
  });
 
  showSelected.addClickHandler(new ClickHandler(){
   public void onClick(ClickEvent evt){
+	  a1.setText("1");
+	  a2.setText("2");
+	  a3.setText("3");
 	  if(name.size()==0)
 		  empty.setText("Nothing To See Here!");
 	  else
@@ -132,7 +228,7 @@ public class ShopList implements EntryPoint {
         if(evt.getNativeKeyCode()==KeyCodes.KEY_ENTER )
           {addList();    
           listItemTB.setText("");}}else{
-        	  updateList();
+        	    updateList(Integer.parseInt(curPage.getText()));
           }
 
       }
@@ -147,6 +243,20 @@ public class ShopList implements EntryPoint {
 }); 
 
   }
+  void changeNext(){
+	  gotoPage(Integer.parseInt(curPage.getText())+1);
+		
+	}
+  void changePrevious(){
+	  gotoPage(Integer.parseInt(curPage.getText())-1);
+	}
+  void gotoPage(int c){
+		
+		if(c <= maxPage && c > 0){
+			//Paging Code
+			updateList(c);
+		}
+	}
   void updateSearch(ArrayList<String> sr,ArrayList<String> sd){
 	  if(sr.size()==0)
 		  empty.setText("Nothing to see here!");
@@ -176,13 +286,16 @@ public class ShopList implements EntryPoint {
         	done.clear();
             for(int i=0;i<result.size();i++)
               {
-                CheckBox cb=new CheckBox();
-                  listB.setWidget(i,1,cb);
+                
                   name.add(result.get(i));
                   done.add("false");
-                  listB.setText(i,0,name.get(i));
               } 
-       
+       for(int i=0;i<10;i++){
+    	   CheckBox cb=new CheckBox();
+           listB.setWidget(i,1,cb);
+         listB.setText(i,0,name.get(i));
+
+       }
       }
     });
   }
@@ -192,10 +305,12 @@ public class ShopList implements EntryPoint {
       done.set(i,"true");
     else
       done.set(i, "false");
-    updateList();
+    updateList(Integer.parseInt(curPage.getText()));
   }
   public void addList()
   {
+	  if(maxPage*10<name.size())
+		  maxPage++;
 	  listB.removeAllRows();
     if(name.contains(listItemTB.getText()))
       return;
@@ -211,21 +326,40 @@ public class ShopList implements EntryPoint {
       listB.setWidget(i,1,cb);
       listB.setText(i,0,name.get(i));
     }
-    updateList();
+    updateList(Integer.parseInt(curPage.getText()));
   }
-  public void updateList(){
-	  if(name.size()==0)
+//  public void updateList(){
+//	  if(name.size()==0)
+//		  empty.setText("Nothing to see here!");
+//	  else{
+//		  empty.setText("");
+//	  listB.removeAllRows();
+//    for(int i=0;i<name.size();i++)
+//    {
+//      CheckBox cb=new CheckBox();
+//      boolean b=done.get(i).equalsIgnoreCase("true")?true:false;
+//      cb.setValue(b);
+//      listB.setWidget(i,1,cb);
+//      listB.setText(i,0,name.get(i));
+//    }
+//  } 
+//  }
+  
+  public void updateList(int page){
+	  int count=0;	  
+if(name.size()==0)
 		  empty.setText("Nothing to see here!");
 	  else{
+		  curPage.setText(""+page);
 		  empty.setText("");
 	  listB.removeAllRows();
-    for(int i=0;i<name.size();i++)
+    for(int i=((page-1)*10);i<name.size() && i<page*10;i++)
     {
       CheckBox cb=new CheckBox();
       boolean b=done.get(i).equalsIgnoreCase("true")?true:false;
       cb.setValue(b);
-      listB.setWidget(i,1,cb);
-      listB.setText(i,0,name.get(i));
+      listB.setWidget(count,1,cb);
+      listB.setText(count++,0,name.get(i));
     }
   } 
   }

@@ -12,10 +12,10 @@ private static final long serialVersionUID = 1L;
 public ArrayList<String> getRandomData() {
 
     //Start
-    String alphabet= "abc";
+    String ws= "randomItem";
     ArrayList<String> arr= new ArrayList<String>();
-    for (int j=0;j<50;j++){
-    	arr.add(alphabet+j);
+    for (int j=1;j<=50;j++){
+    	arr.add(ws+j);
     	}
     return arr;
 //End
